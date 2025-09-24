@@ -1,0 +1,8 @@
+PyQt6>=6.4.0
+pymodbus>=3.5.0
+PyYAML>=6.0
+pytest>=7.0.0
+pytest-qt>=4.2.0
+pytest-cov>=4.0.0
+black>=23.0.0
+ruff>=0.1.0

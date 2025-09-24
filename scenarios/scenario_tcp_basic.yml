@@ -1,0 +1,37 @@
+name: Basic TCP Scenario
+description: A basic Modbus TCP scenario with holding registers
+version: 0.0.1
+devices:
+  1:
+    name: Pump Controller
+    description: A simulated pump controller with various registers
+    registers:
+      holding_registers:
+        - address: 40001
+          value: 123
+          label: Pump Status
+        - address: 40002
+          value: 456
+          label: Flow Rate
+        - address: 40003
+          value: 789
+          label: Temperature
+  2:
+    name: Temperature Sensor
+    description: A simulated temperature sensor
+    registers:
+      holding_registers:
+        - address: 40001
+          value: 25
+          label: Current Temperature
+        - address: 40002
+          value: 20
+          label: Set Point
+  3:
+    name: Pressure Monitor
+    description: A simulated pressure monitoring device
+    registers:
+      holding_registers:
+        - address: 40001
+          value: 1013
+          label: Atmospheric Pressure
