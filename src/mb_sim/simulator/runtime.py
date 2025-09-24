@@ -1,0 +1,38 @@
+"""Runtime management for the Modbus simulator MVP."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Dict, Iterable, List
+
+from mb_sim.models.device import Device, DeviceConfig
+from mb_sim.models.register_map import RegisterDefinition
+
+
+@dataclass
+class DeviceDescriptor:
+    device_id: int
+    name: str
+    registers: Iterable[RegisterDefinition] = field(default_factory=list)
+
+
+class SimulationRuntime:
+    """Maintains simulated devices and register state."""
+
+    def __init__(self) -> None:
+        self.devices: Dict[int, Device] = {}
+
+    def add_device(self, descriptor: DeviceDescriptor) -> Device:
+        if descriptor.device_id in self.devices:
+            raise ValueError(f"Device {descriptor.device_id} already exists")
+
+        device = Device(DeviceConfig(device_id=descriptor.device_id, name=descriptor.name))
+        for register in descriptor.registers:
+            device.add_holding_register(register)
+
+        self.devices[descriptor.device_id] = device
+        return device
+
+    def list_devices(self) -> List[Device]:
+        return list(self.devices.values())
+
