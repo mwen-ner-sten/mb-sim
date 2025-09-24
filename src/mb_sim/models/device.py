@@ -37,6 +37,10 @@ class Device:
             for address, value in self.holding_registers.items()
         ]
 
+    def remove_holding_register(self, address: int) -> None:
+        """Remove a holding register from the device."""
+        self.holding_registers.remove_register(address)
+
     @property
     def display_name(self) -> str:
         if self.config.name:

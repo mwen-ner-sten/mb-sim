@@ -1,0 +1,120 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mb-sim"
+version = "0.0.1"
+description = "Modbus simulator for testing and development"
+authors = [
+    {name = "Mike Wennersten", email = "mike@wen-ner-sten.com"},
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "PyQt6>=6.4.0",
+    "pymodbus>=3.5.0",
+    "PyYAML>=6.0",
+]
+
+[project.scripts]
+mb-sim = "mb_sim.cli:main"
+
+[project.urls]
+Homepage = "https://wen-ner-sten.com"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+lint.select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "N",  # pep8-naming
+    "UP", # pyupgrade
+    "YTT", # flake8-2020
+    "S",  # flake8-bandit
+    "BLE", # flake8-bugbear
+    "FBT", # flake8-boolean-trap
+    "B",  # flake8-bugbear
+    "A",  # flake8-builtins
+    "COM", # flake8-commas
+    "C4", # flake8-comprehensions
+    "DTZ", # flake8-datetimez
+    "T20", # flake8-print
+    "PYI", # flake8-pyi
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "TCH", # flake8-type-checking
+    "INT", # flake8-gettext
+    "ARG", # flake8-unused-arguments
+    "PTH", # flake8-use-pathlib
+    "ERA", # flake8-eradicate
+    "PD", # flake8-pie
+    "PGH", # pygrep-hooks
+    "PL",  # Pylint
+    "TRY", # tryceratops
+    "FLY", # flynt
+    "NPY", # NumPy specific rules
+    "AIR", # Airflow
+    "PERF", # Perflint
+    "FURB", # refurb
+    "LOG", # flake8-logging
+    "SLOT", # flake8-slots
+    "RSE", # flake8-raise
+    "RET", # flake8-return
+    "SLF", # flake8-self
+    "ASYNC", # flake8-async
+    "TRIO", # flake8-trio
+    "FIX", # flake8-fixme
+    "TD",  # flake8-todos
+    "FIX", # flake8-fixme
+    "TD",  # flake8-todos
+    "PIE", # flake8-pie-unused-import
+    "TCH", # flake8-type-checking
+    "PTH", # flake8-use-pathlib
+    "ERA", # flake8-eradicate
+    "PD",  # flake8-pie
+    "PGH", # pygrep-hooks
+    "PL",  # Pylint
+    "TRY", # tryceratops
+    "FLY", # flynt
+    "NPY", # NumPy specific rules
+    "AIR", # Airflow
+    "PERF", # Perflint
+    "FURB", # refurb
+    "LOG", # flake8-logging
+    "SLOT", # flake8-slots
+    "RSE", # flake8-raise
+    "RET", # flake8-return
+    "SLF", # flake8-self
+    "ASYNC", # flake8-async
+    "TRIO", # flake8-trio
+    "FIX", # flake8-fixme
+    "TD",  # flake8-todos
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]  # assert allowed in tests
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "--cov=src/mb_sim --cov-report=term-missing"
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]

@@ -49,3 +49,9 @@ class RegisterMap:
     def items(self) -> List[Tuple[int, RegisterValue]]:
         return [(address, self._registers[address]) for address in self.addresses()]
 
+    def remove_register(self, address: int) -> None:
+        """Remove a register from the map."""
+        if address not in self._registers:
+            raise KeyError(f"Unknown register {address}")
+        del self._registers[address]
+
