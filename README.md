@@ -61,16 +61,43 @@ Available options:
 
 ### GUI Application
 
-Launch the graphical interface:
+Launch the graphical interface using the provided launcher:
+
+#### 🚀 **Easy Launch (Recommended)**
+```bash
+python launch.py
+```
+
+#### 📝 **Alternative Methods**
+
+**Cross-platform:**
 ```bash
 python -m mb_sim.gui
 ```
 
-The GUI provides:
+**Linux/macOS:**
+```bash
+./launch_gui.sh
+```
+
+**Windows:**
+```bash
+launch_gui.bat
+```
+
+#### 🎯 **GUI Features**
 - Device list with real-time status
 - Register table with inline editing
 - Activity logging
 - Device and register management dialogs
+- Multi-panel interface for comprehensive management
+
+#### 💡 **Launcher Benefits**
+- Automatically detects your operating system
+- Sets up PYTHONPATH correctly
+- Provides helpful tips and troubleshooting
+- Handles different Python installations
+- Shows progress and status information
 
 ### Creating Scenarios
 
