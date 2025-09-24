@@ -30,8 +30,8 @@ from PyQt6.QtWidgets import (
     QComboBox,
 )
 
-from mb_sim.models.device import Device
-from mb_sim.models.register_map import RegisterDefinition
+from ..models.device import Device
+from ..models.register_map import RegisterDefinition
 
 
 @dataclass
