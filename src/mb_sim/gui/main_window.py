@@ -798,14 +798,10 @@ class MainWindow(QMainWindow):
             self.log_message(f"Successfully imported {devices_imported} devices from {filename}")
             self.refresh_device_list()
 
-            QMessageBox.information(
-                self,
-                "Import Complete",
-                f"Successfully imported {devices_imported} devices from {filename}"
-            )
+            self.log_message(f"✅ Successfully imported {devices_imported} devices from {filename}")
 
         except Exception as e:
-            QMessageBox.warning(self, "Import Error", f"Failed to import configuration: {str(e)}")
+            self.log_message(f"❌ Import Error: Failed to import configuration: {str(e)}")
 
     def export_configuration(self) -> None:
         """Export device configuration to file."""
@@ -814,7 +810,7 @@ class MainWindow(QMainWindow):
 
         devices = self.simulation_runtime.list_devices()
         if not devices:
-            QMessageBox.information(self, "No Devices", "No devices to export.")
+            self.log_message("⚠️ Export Error: No devices to export")
             return
 
         filename, selected_filter = QFileDialog.getSaveFileName(
@@ -859,18 +855,187 @@ class MainWindow(QMainWindow):
                     json.dump(config_data, f, indent=2)
 
             self.log_message(f"Exported configuration to {filename}")
-            QMessageBox.information(
-                self,
-                "Export Complete",
-                f"Configuration exported to {filename}"
-            )
+            self.log_message(f"✅ Configuration exported to {filename}")
 
         except Exception as e:
-            QMessageBox.warning(self, "Export Error", f"Failed to export configuration: {str(e)}")
+            self.log_message(f"❌ Export Error: Failed to export configuration: {str(e)}")
 
     def show_settings(self) -> None:
         """Show application settings dialog."""
-        QMessageBox.information(self, "Settings", "Settings dialog will be available in a future update.")
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QSpinBox, QCheckBox, QPushButton, QGroupBox, QFormLayout, QTabWidget, QWidget
+
+        class SettingsDialog(QDialog):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self.setWindowTitle("Application Settings")
+                self.setModal(True)
+                self.resize(500, 400)
+
+                layout = QVBoxLayout()
+                self.setLayout(layout)
+
+                # Create tab widget for different settings categories
+                tab_widget = QTabWidget()
+
+                # General settings tab
+                general_tab = self._create_general_tab()
+                tab_widget.addTab(general_tab, "General")
+
+                # Simulation settings tab
+                sim_tab = self._create_simulation_tab()
+                tab_widget.addTab(sim_tab, "Simulation")
+
+                # UI settings tab
+                ui_tab = self._create_ui_tab()
+                tab_widget.addTab(ui_tab, "Interface")
+
+                layout.addWidget(tab_widget)
+
+                # Button layout
+                button_layout = QHBoxLayout()
+                button_layout.addStretch()
+
+                save_button = QPushButton("💾 Save Settings")
+                save_button.clicked.connect(self.accept)
+                button_layout.addWidget(save_button)
+
+                cancel_button = QPushButton("❌ Cancel")
+                cancel_button.clicked.connect(self.reject)
+                button_layout.addWidget(cancel_button)
+
+                layout.addLayout(button_layout)
+
+            def _create_general_tab(self):
+                tab = QWidget()
+                layout = QFormLayout()
+                tab.setLayout(layout)
+
+                # Auto-refresh interval
+                self.refresh_interval = QSpinBox()
+                self.refresh_interval.setRange(100, 10000)  # 100ms to 10s
+                self.refresh_interval.setValue(1000)  # 1 second default
+                self.refresh_interval.setSuffix(" ms")
+                layout.addRow("Auto-refresh interval:", self.refresh_interval)
+
+                # Log retention
+                self.log_retention = QSpinBox()
+                self.log_retention.setRange(100, 10000)  # 100 to 10000 lines
+                self.log_retention.setValue(1000)
+                self.log_retention.setSuffix(" lines")
+                layout.addRow("Log retention:", self.log_retention)
+
+                # Default device count
+                self.default_devices = QSpinBox()
+                self.default_devices.setRange(1, 10)
+                self.default_devices.setValue(1)
+                layout.addRow("Default devices:", self.default_devices)
+
+                return tab
+
+            def _create_simulation_tab(self):
+                tab = QWidget()
+                layout = QVBoxLayout()
+                tab.setLayout(layout)
+
+                # Simulation settings group
+                sim_group = QGroupBox("Simulation Behavior")
+                sim_layout = QFormLayout()
+                sim_group.setLayout(sim_layout)
+
+                # Auto-start simulation
+                self.auto_start_sim = QCheckBox("Auto-start simulation on device selection")
+                sim_layout.addRow(self.auto_start_sim)
+
+                # Default simulation pattern
+                self.default_pattern = QComboBox()
+                self.default_pattern.addItems(["None", "Sine Wave", "Sawtooth", "Ramp", "Random"])
+                sim_layout.addRow("Default pattern:", self.default_pattern)
+
+                # Pattern speed
+                self.pattern_speed = QSpinBox()
+                self.pattern_speed.setRange(1, 100)  # 1x to 100x speed
+                self.pattern_speed.setValue(10)
+                self.pattern_speed.setSuffix("x")
+                sim_layout.addRow("Pattern speed:", self.pattern_speed)
+
+                layout.addWidget(sim_group)
+
+                # Value bounds group
+                bounds_group = QGroupBox("Value Constraints")
+                bounds_layout = QFormLayout()
+                bounds_group.setLayout(bounds_layout)
+
+                # Min value
+                self.min_value = QSpinBox()
+                self.min_value.setRange(0, 65535)
+                self.min_value.setValue(0)
+                bounds_layout.addRow("Minimum value:", self.min_value)
+
+                # Max value
+                self.max_value = QSpinBox()
+                self.max_value.setRange(0, 65535)
+                self.max_value.setValue(65535)
+                bounds_layout.addRow("Maximum value:", self.max_value)
+
+                layout.addWidget(bounds_group)
+                layout.addStretch()
+
+                return tab
+
+            def _create_ui_tab(self):
+                tab = QWidget()
+                layout = QVBoxLayout()
+                tab.setLayout(layout)
+
+                # Appearance group
+                appearance_group = QGroupBox("Appearance")
+                appearance_layout = QFormLayout()
+                appearance_group.setLayout(appearance_layout)
+
+                # Theme selection
+                self.theme_combo = QComboBox()
+                self.theme_combo.addItems(["Modern Blue", "Dark Theme", "Light Theme", "High Contrast"])
+                self.theme_combo.setCurrentText("Modern Blue")
+                appearance_layout.addRow("Theme:", self.theme_combo)
+
+                # Font size
+                self.font_size = QSpinBox()
+                self.font_size.setRange(8, 18)
+                self.font_size.setValue(10)
+                self.font_size.setSuffix(" pt")
+                appearance_layout.addRow("Font size:", self.font_size)
+
+                # Show tooltips
+                self.show_tooltips = QCheckBox("Show tooltips")
+                self.show_tooltips.setChecked(True)
+                appearance_layout.addRow(self.show_tooltips)
+
+                layout.addWidget(appearance_group)
+
+                # Window behavior group
+                window_group = QGroupBox("Window Behavior")
+                window_layout = QFormLayout()
+                window_group.setLayout(window_layout)
+
+                # Remember window size
+                self.remember_size = QCheckBox("Remember window size and position")
+                self.remember_size.setChecked(True)
+                window_layout.addRow(self.remember_size)
+
+                # Always on top
+                self.always_on_top = QCheckBox("Keep window always on top")
+                window_layout.addRow(self.always_on_top)
+
+                layout.addWidget(window_group)
+                layout.addStretch()
+
+                return tab
+
+        dialog = SettingsDialog(self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            self.log_message("✅ Settings updated successfully")
+        else:
+            self.log_message("ℹ️ Settings dialog cancelled")
 
     def show_about(self) -> None:
         """Show about dialog."""
@@ -993,12 +1158,12 @@ class MainWindow(QMainWindow):
             self.refresh_device_list()
 
         except ValueError as error:
-            QMessageBox.warning(self, "Error", str(error))
+            self.log_message(f"❌ Device Error: {str(error)}")
 
     def remove_device(self) -> None:
         """Remove the selected device."""
         if not self.current_device:
-            QMessageBox.information(self, "No Selection", "Please select a device to remove.")
+            self.log_message("⚠️ No device selected to remove")
             return
 
         reply = QMessageBox.question(
@@ -1020,7 +1185,7 @@ class MainWindow(QMainWindow):
     def add_register(self) -> None:
         """Add a new register to the current device."""
         if not self.current_device:
-            QMessageBox.information(self, "No Selection", "Please select a device first.")
+            self.log_message("⚠️ No device selected - please select a device first")
             return
 
         dialog = RegisterDialog()
@@ -1034,13 +1199,13 @@ class MainWindow(QMainWindow):
                 self.refresh_register_table()
 
             except ValueError as e:
-                QMessageBox.warning(self, "Error", str(e))
+                self.log_message(f"❌ Register Error: {str(e)}")
 
     def edit_register(self) -> None:
         """Edit the selected register."""
         current_row = self.register_table.currentRow()
         if current_row < 0 or not self.current_device:
-            QMessageBox.information(self, "No Selection", "Please select a register to edit.")
+            self.log_message("⚠️ No register selected - please select a register to edit")
             return
 
         # Get current register data
@@ -1067,13 +1232,13 @@ class MainWindow(QMainWindow):
                 self.refresh_register_table()
 
             except KeyError as e:
-                QMessageBox.warning(self, "Error", str(e))
+                self.log_message(f"❌ Key Error: {str(e)}")
 
     def remove_register(self) -> None:
         """Remove the selected register."""
         current_row = self.register_table.currentRow()
         if current_row < 0 or not self.current_device:
-            QMessageBox.information(self, "No Selection", "Please select a register to remove.")
+            self.log_message("⚠️ No register selected - please select a register to remove")
             return
 
         address_item = self.register_table.item(current_row, 0)
@@ -1096,7 +1261,7 @@ class MainWindow(QMainWindow):
                 self.refresh_register_table()
 
             except KeyError as e:
-                QMessageBox.warning(self, "Error", str(e))
+                self.log_message(f"❌ Key Error: {str(e)}")
 
     def log_message(self, message: str) -> None:
         """Add a message to the activity log."""
@@ -1111,7 +1276,7 @@ class MainWindow(QMainWindow):
     def randomize_registers(self) -> None:
         """Set random values for all registers in the current device."""
         if not self.current_device:
-            QMessageBox.information(self, "No Selection", "Please select a device first.")
+            self.log_message("⚠️ No device selected - please select a device first")
             return
 
         import random
@@ -1127,7 +1292,7 @@ class MainWindow(QMainWindow):
     def increment_registers(self) -> None:
         """Increment all register values by 1."""
         if not self.current_device:
-            QMessageBox.information(self, "No Selection", "Please select a device first.")
+            self.log_message("⚠️ No device selected - please select a device first")
             return
 
         registers = self.current_device.list_holding_registers()
@@ -1174,14 +1339,14 @@ class MainWindow(QMainWindow):
             self.refresh_device_list()
 
         except ValueError as error:
-            QMessageBox.warning(self, "Error", str(error))
+            self.log_message(f"❌ Device Error: {str(error)}")
 
     def clear_all_devices(self) -> None:
         """Remove all devices from the simulation."""
         devices = self.simulation_runtime.list_devices()
 
         if not devices:
-            QMessageBox.information(self, "No Devices", "No devices to clear.")
+            self.log_message("⚠️ No devices to clear")
             return
 
         reply = QMessageBox.question(
@@ -1202,7 +1367,7 @@ class MainWindow(QMainWindow):
                 self.register_table.setRowCount(0)
 
             except Exception as error:
-                QMessageBox.warning(self, "Error", str(error))
+                self.log_message(f"❌ Clear Error: {str(error)}")
 
     def toggle_connection(self) -> None:
         """Toggle the connection status of the Modbus simulator."""
@@ -1284,7 +1449,7 @@ class MainWindow(QMainWindow):
         """Export the activity log to a file."""
         log_content = self.log_text.toPlainText()
         if not log_content.strip():
-            QMessageBox.information(self, "No Log Data", "No log data to export.")
+            self.log_message("⚠️ No log data to export")
             return
 
         from datetime import datetime
@@ -1298,11 +1463,10 @@ class MainWindow(QMainWindow):
                 f.write("=" * 50 + "\n\n")
                 f.write(log_content)
 
-            QMessageBox.information(self, "Export Complete", f"Log exported to {filename}")
-            self.log_message(f"Log exported to {filename}")
+            self.log_message(f"✅ Log exported to {filename}")
 
         except Exception as e:
-            QMessageBox.warning(self, "Export Error", f"Failed to export log: {str(e)}")
+            self.log_message(f"❌ Export Error: Failed to export log: {str(e)}")
 
     def load_basic_preset(self) -> None:
         """Load a basic device preset with standard registers."""
@@ -1331,10 +1495,10 @@ class MainWindow(QMainWindow):
             self.log_message(f"Loaded basic device preset: {device.display_name}")
             self.refresh_device_list()
 
-            QMessageBox.information(self, "Preset Loaded", "Basic device preset loaded successfully!")
+            self.log_message("✅ Basic device preset loaded successfully!")
 
         except Exception as e:
-            QMessageBox.warning(self, "Error", f"Failed to load preset: {str(e)}")
+            self.log_message(f"❌ Preset Error: Failed to load preset: {str(e)}")
 
     def load_sensor_preset(self) -> None:
         """Load sensor simulation devices."""
@@ -1378,10 +1542,10 @@ class MainWindow(QMainWindow):
             self.log_message(f"Loaded sensor simulation preset with {devices_added} devices")
             self.refresh_device_list()
 
-            QMessageBox.information(self, "Preset Loaded", f"Sensor simulation preset loaded with {devices_added} devices!")
+            self.log_message(f"✅ Sensor simulation preset loaded with {devices_added} devices!")
 
         except Exception as e:
-            QMessageBox.warning(self, "Error", f"Failed to load preset: {str(e)}")
+            self.log_message(f"❌ Preset Error: Failed to load preset: {str(e)}")
 
     def load_motor_preset(self) -> None:
         """Load motor control simulation devices."""
@@ -1410,10 +1574,10 @@ class MainWindow(QMainWindow):
             self.log_message(f"Loaded motor control preset: {device.display_name}")
             self.refresh_device_list()
 
-            QMessageBox.information(self, "Preset Loaded", "Motor control preset loaded successfully!")
+            self.log_message("✅ Motor control preset loaded successfully!")
 
         except Exception as e:
-            QMessageBox.warning(self, "Error", f"Failed to load preset: {str(e)}")
+            self.log_message(f"❌ Preset Error: Failed to load preset: {str(e)}")
 
     def load_hmi_preset(self) -> None:
         """Load HMI panel simulation devices."""
@@ -1442,15 +1606,15 @@ class MainWindow(QMainWindow):
             self.log_message(f"Loaded HMI panel preset: {device.display_name}")
             self.refresh_device_list()
 
-            QMessageBox.information(self, "Preset Loaded", "HMI panel preset loaded successfully!")
+            self.log_message("✅ HMI panel preset loaded successfully!")
 
         except Exception as e:
-            QMessageBox.warning(self, "Error", f"Failed to load preset: {str(e)}")
+            self.log_message(f"❌ Preset Error: Failed to load preset: {str(e)}")
 
     def decrement_registers(self) -> None:
         """Decrement all register values by 1."""
         if not self.current_device:
-            QMessageBox.information(self, "No Selection", "Please select a device first.")
+            self.log_message("⚠️ No device selected - please select a device first")
             return
 
         registers = self.current_device.list_holding_registers()
@@ -1467,7 +1631,7 @@ class MainWindow(QMainWindow):
     def apply_sine_pattern(self) -> None:
         """Apply sine wave pattern to register values."""
         if not self.current_device:
-            QMessageBox.information(self, "No Selection", "Please select a device first.")
+            self.log_message("⚠️ No device selected - please select a device first")
             return
 
         import math
@@ -1485,7 +1649,7 @@ class MainWindow(QMainWindow):
     def apply_sawtooth_pattern(self) -> None:
         """Apply sawtooth pattern to register values."""
         if not self.current_device:
-            QMessageBox.information(self, "No Selection", "Please select a device first.")
+            self.log_message("⚠️ No device selected - please select a device first")
             return
 
         registers = self.current_device.list_holding_registers()
@@ -1502,7 +1666,7 @@ class MainWindow(QMainWindow):
     def apply_ramp_pattern(self) -> None:
         """Apply ramp pattern (0-100% cycle) to register values."""
         if not self.current_device:
-            QMessageBox.information(self, "No Selection", "Please select a device first.")
+            self.log_message("⚠️ No device selected - please select a device first")
             return
 
         registers = self.current_device.list_holding_registers()

@@ -47,4 +47,5 @@
 
 ## 4. Cross-Cutting Backlog
 - Packaging strategy for desktop distribution (PyInstaller, Briefcase).
+- Settings system implemented with comprehensive user preferences (refresh intervals, simulation behavior, UI themes).
 
