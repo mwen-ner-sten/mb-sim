@@ -1061,15 +1061,37 @@ class MainWindow(QMainWindow):
         )
 
     def refresh_device_list(self) -> None:
-        """Refresh the device list."""
+        """Refresh the device list while preserving selection."""
+        # Store the currently selected device ID before clearing
+        selected_device_id = None
+        current_item = self.device_list.currentItem()
+        if current_item and self.current_device:
+            selected_device_id = self.current_device.config.device_id
+
+        # Clear and rebuild the list
         self.device_list.clear()
 
         devices = self.simulation_runtime.list_devices()
+        selected_item = None
+
         for device in devices:
             item_text = f"{device.config.device_id}: {device.display_name}"
             item = QListWidgetItem(item_text)
             item.setData(Qt.ItemDataRole.UserRole, device)
             self.device_list.addItem(item)
+
+            # If this device was selected before, store the item for re-selection
+            if selected_device_id and device.config.device_id == selected_device_id:
+                selected_item = item
+
+        # Restore selection if the device still exists
+        if selected_item:
+            self.device_list.setCurrentItem(selected_item)
+        elif not devices and self.current_device:
+            # If no devices exist but we had a current device, clear it
+            self.current_device = None
+            self.selection_info_label.setText("No device selected")
+            self.register_table.setRowCount(0)
 
     def refresh_register_table(self) -> None:
         """Refresh the register table for the current device."""
