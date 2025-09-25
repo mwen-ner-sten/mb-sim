@@ -1148,22 +1148,36 @@ class MainWindow(QMainWindow):
             self.selection_info_label.setText("No device selected")
             self.register_table.setRowCount(0)
 
+    def _get_next_available_device_id(self) -> int:
+        """Calculate the next available device ID."""
+        existing_ids = {device.config.device_id for device in self.simulation_runtime.list_devices()}
+        next_device_id = 1
+        while next_device_id in existing_ids:
+            next_device_id += 1
+        return next_device_id
+
     def add_device(self) -> None:
         """Add a new device."""
-        dialog = DeviceDialog()
+        # Get the next available device ID
+        next_device_id = self._get_next_available_device_id()
+
+        # Create dialog with smart default
+        dialog = DeviceDialog(device_id=next_device_id)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             device_id, name, description = dialog.get_device_config()
 
-        try:
-            descriptor = DeviceDescriptor(device_id=device_id, name=name, registers=[])
-            device = self.simulation_runtime.add_device(descriptor)
-            device.config = DeviceConfig(device_id, name, description)
+            try:
+                descriptor = DeviceDescriptor(device_id=device_id, name=name, registers=[])
+                device = self.simulation_runtime.add_device(descriptor)
+                device.config = DeviceConfig(device_id, name, description)
 
-            self.log_message(f"Added device: {device.display_name}")
-            self.refresh_device_list()
+                self.log_message(f"✅ Added device: {device.display_name} (ID: {device_id})")
+                self.refresh_device_list()
 
-        except ValueError as error:
-            self.log_message(f"❌ Device Error: {str(error)}")
+            except ValueError as error:
+                self.log_message(f"❌ Device Error: {str(error)}")
+        else:
+            self.log_message(f"ℹ️ Device creation cancelled - suggested ID was {next_device_id}")
 
     def remove_device(self) -> None:
         """Remove the selected device."""
@@ -1463,11 +1477,8 @@ class MainWindow(QMainWindow):
     def load_basic_preset(self) -> None:
         """Load a basic device preset with standard registers."""
         try:
-            # Find next available device ID
-            existing_ids = {device.config.device_id for device in self.simulation_runtime.list_devices()}
-            device_id = 1
-            while device_id in existing_ids:
-                device_id += 1
+            # Get next available device ID
+            device_id = self._get_next_available_device_id()
 
             registers = [
                 RegisterDefinition(address=40001, value=100, label="Temperature"),
@@ -1497,17 +1508,17 @@ class MainWindow(QMainWindow):
         try:
             # Load multiple sensor devices
             sensor_configs = [
-                {"name": "Temperature Sensor", "id": 10, "registers": [
+                {"name": "Temperature Sensor", "registers": [
                     RegisterDefinition(address=40001, value=25, label="Temperature °C"),
                     RegisterDefinition(address=40002, value=0, label="Alarm Status"),
                     RegisterDefinition(address=40003, value=1, label="Sensor Status"),
                 ]},
-                {"name": "Pressure Sensor", "id": 11, "registers": [
+                {"name": "Pressure Sensor", "registers": [
                     RegisterDefinition(address=40001, value=1013, label="Pressure mBar"),
                     RegisterDefinition(address=40002, value=0, label="Alarm Status"),
                     RegisterDefinition(address=40003, value=1, label="Sensor Status"),
                 ]},
-                {"name": "Flow Meter", "id": 12, "registers": [
+                {"name": "Flow Meter", "registers": [
                     RegisterDefinition(address=40001, value=150, label="Flow Rate L/min"),
                     RegisterDefinition(address=40002, value=0, label="Total Volume"),
                     RegisterDefinition(address=40003, value=1, label="Sensor Status"),
@@ -1515,12 +1526,14 @@ class MainWindow(QMainWindow):
             ]
 
             devices_added = 0
+            existing_ids = {device.config.device_id for device in self.simulation_runtime.list_devices()}
+
             for config in sensor_configs:
-                # Check if device ID is available
-                device_id = config["id"]
-                existing_ids = {device.config.device_id for device in self.simulation_runtime.list_devices()}
-                if device_id in existing_ids:
-                    device_id = max(existing_ids) + 1 if existing_ids else 1
+                # Find next available device ID
+                device_id = 1
+                while device_id in existing_ids:
+                    device_id += 1
+                existing_ids.add(device_id)  # Add to set to avoid conflicts with other sensors
 
                 descriptor = DeviceDescriptor(
                     device_id=device_id,
@@ -1531,10 +1544,8 @@ class MainWindow(QMainWindow):
                 self.simulation_runtime.add_device(descriptor)
                 devices_added += 1
 
-            self.log_message(f"Loaded sensor simulation preset with {devices_added} devices")
+            self.log_message(f"✅ Loaded sensor simulation preset with {devices_added} devices")
             self.refresh_device_list()
-
-            self.log_message(f"✅ Sensor simulation preset loaded with {devices_added} devices!")
 
         except Exception as e:
             self.log_message(f"❌ Preset Error: Failed to load preset: {str(e)}")
@@ -1542,10 +1553,7 @@ class MainWindow(QMainWindow):
     def load_motor_preset(self) -> None:
         """Load motor control simulation devices."""
         try:
-            existing_ids = {device.config.device_id for device in self.simulation_runtime.list_devices()}
-            device_id = 20
-            while device_id in existing_ids:
-                device_id += 1
+            device_id = self._get_next_available_device_id()
 
             registers = [
                 RegisterDefinition(address=40001, value=1500, label="Motor Speed RPM"),
@@ -1574,10 +1582,7 @@ class MainWindow(QMainWindow):
     def load_hmi_preset(self) -> None:
         """Load HMI panel simulation devices."""
         try:
-            existing_ids = {device.config.device_id for device in self.simulation_runtime.list_devices()}
-            device_id = 30
-            while device_id in existing_ids:
-                device_id += 1
+            device_id = self._get_next_available_device_id()
 
             registers = [
                 RegisterDefinition(address=40001, value=1, label="Screen Number"),
