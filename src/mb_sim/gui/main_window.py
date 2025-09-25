@@ -1136,11 +1136,11 @@ class MainWindow(QMainWindow):
         current_item = self.device_list.currentItem()
         if current_item:
             self.current_device = current_item.data(Qt.ItemDataRole.UserRole)
-            self.status_label.setText(f"Selected: {self.current_device.display_name}")
+            self.selection_info_label.setText(f"Selected: {self.current_device.display_name}")
             self.refresh_register_table()
         else:
             self.current_device = None
-            self.status_label.setText("No device selected")
+            self.selection_info_label.setText("No device selected")
             self.register_table.setRowCount(0)
 
     def add_device(self) -> None:
@@ -1180,7 +1180,7 @@ class MainWindow(QMainWindow):
                 self.current_device = None
                 self.refresh_device_list()
             except KeyError as error:
-                QMessageBox.warning(self, "Error", str(error))
+                self.log_message(f"❌ Device Removal Error: {str(error)}")
 
     def add_register(self) -> None:
         """Add a new register to the current device."""
@@ -1309,7 +1309,7 @@ class MainWindow(QMainWindow):
     def duplicate_device(self) -> None:
         """Duplicate the currently selected device."""
         if not self.current_device:
-            QMessageBox.information(self, "No Selection", "Please select a device to duplicate.")
+            self.log_message("⚠️ No device selected - please select a device to duplicate")
             return
 
         try:
@@ -1683,7 +1683,7 @@ class MainWindow(QMainWindow):
     def start_auto_simulation(self) -> None:
         """Start automatic simulation with the current pattern."""
         if not self.current_device:
-            QMessageBox.information(self, "No Device", "Please select a device first.")
+            self.log_message("⚠️ No device selected - please select a device to start auto-simulation")
             return
 
         self.auto_sim_active = True
