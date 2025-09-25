@@ -707,7 +707,12 @@ class MainWindow(QMainWindow):
         self.last_update = datetime.now()
 
         self.refresh_device_list()
-        if self.current_device:
+
+        # Clear register table if no devices exist or no device is selected
+        devices = self.simulation_runtime.list_devices()
+        if not devices or not self.current_device:
+            self.register_table.setRowCount(0)
+        else:
             self.refresh_register_table()
 
         self.update_status_bar()
@@ -1166,21 +1171,15 @@ class MainWindow(QMainWindow):
             self.log_message("⚠️ No device selected to remove")
             return
 
-        reply = QMessageBox.question(
-            self,
-            "Confirm Removal",
-            f"Are you sure you want to remove device '{self.current_device.display_name}'?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
-
-        if reply == QMessageBox.StandardButton.Yes and self.current_device:
-            try:
-                self.simulation_runtime.remove_device(self.current_device.config.device_id)
-                self.log_message(f"Removed device: {self.current_device.display_name}")
-                self.current_device = None
-                self.refresh_device_list()
-            except KeyError as error:
-                self.log_message(f"❌ Device Removal Error: {str(error)}")
+        try:
+            device_name = self.current_device.display_name
+            self.simulation_runtime.remove_device(self.current_device.config.device_id)
+            self.log_message(f"✅ Removed device: {device_name}")
+            self.current_device = None
+            self.refresh_device_list()
+            self.register_table.setRowCount(0)  # Clear ghost registers
+        except KeyError as error:
+            self.log_message(f"❌ Device Removal Error: {str(error)}")
 
     def add_register(self) -> None:
         """Add a new register to the current device."""
@@ -1349,25 +1348,18 @@ class MainWindow(QMainWindow):
             self.log_message("⚠️ No devices to clear")
             return
 
-        reply = QMessageBox.question(
-            self,
-            "Confirm Clear All",
-            f"Are you sure you want to remove all {len(devices)} devices? This cannot be undone.",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
+        try:
+            device_count = len(devices)
+            for device in devices:
+                self.simulation_runtime.remove_device(device.config.device_id)
 
-        if reply == QMessageBox.StandardButton.Yes:
-            try:
-                for device in devices:
-                    self.simulation_runtime.remove_device(device.config.device_id)
+            self.current_device = None
+            self.log_message(f"✅ Cleared all {device_count} devices from simulation")
+            self.refresh_device_list()
+            self.register_table.setRowCount(0)  # Ensure ghost registers are cleared
 
-                self.current_device = None
-                self.log_message("Cleared all devices from simulation")
-                self.refresh_device_list()
-                self.register_table.setRowCount(0)
-
-            except Exception as error:
-                self.log_message(f"❌ Clear Error: {str(error)}")
+        except Exception as error:
+            self.log_message(f"❌ Clear Error: {str(error)}")
 
     def toggle_connection(self) -> None:
         """Toggle the connection status of the Modbus simulator."""
