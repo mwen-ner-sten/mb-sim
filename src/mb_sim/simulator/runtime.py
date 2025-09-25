@@ -36,3 +36,13 @@ class SimulationRuntime:
     def list_devices(self) -> List[Device]:
         return list(self.devices.values())
 
+    def get_device(self, device_id: int) -> Device:
+        if device_id not in self.devices:
+            raise KeyError(f"Device {device_id} not found")
+        return self.devices[device_id]
+
+    def remove_device(self, device_id: int) -> None:
+        if device_id not in self.devices:
+            raise KeyError(f"Device {device_id} not found")
+        del self.devices[device_id]
+

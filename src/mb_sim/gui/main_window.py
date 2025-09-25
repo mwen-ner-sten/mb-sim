@@ -2,42 +2,33 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
+    QFormLayout,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QMainWindow,
+    QMessageBox,
     QPushButton,
-    QVBoxLayout,
-    QWidget,
+    QSpinBox,
     QTableWidget,
     QTableWidgetItem,
-    QTabWidget,
     QTextEdit,
-    QSplitter,
-    QGroupBox,
-    QFormLayout,
-    QSpinBox,
-    QLineEdit,
-    QMessageBox,
-    QDialog,
-    QDialogButtonBox,
-    QComboBox,
+    QVBoxLayout,
+    QWidget,
 )
 
-from ..models.device import Device
-from ..models.register_map import RegisterDefinition
-
-
-@dataclass
-class SimulatedDevice:
-    device_id: int
-    name: str
+from mb_sim.models.device import Device, DeviceConfig
+from mb_sim.models.register_map import RegisterDefinition
+from mb_sim.simulator.runtime import DeviceDescriptor, SimulationRuntime
 
 
 class DeviceDialog(QDialog):
@@ -129,7 +120,7 @@ class RegisterDialog(QDialog):
 class MainWindow(QMainWindow):
     """Enhanced GUI showing simulated devices and register management."""
 
-    def __init__(self, simulation_runtime=None) -> None:
+    def __init__(self, simulation_runtime: SimulationRuntime) -> None:
         super().__init__()
         self.setWindowTitle("MB-Sim Modbus Simulator")
         self.resize(1200, 800)
@@ -273,13 +264,12 @@ class MainWindow(QMainWindow):
         """Refresh the device list."""
         self.device_list.clear()
 
-        if self.simulation_runtime:
-            devices = self.simulation_runtime.list_devices()
-            for device in devices:
-                item_text = f"{device.config.device_id}: {device.display_name}"
-                item = QListWidgetItem(item_text)
-                item.setData(Qt.ItemDataRole.UserRole, device)
-                self.device_list.addItem(item)
+        devices = self.simulation_runtime.list_devices()
+        for device in devices:
+            item_text = f"{device.config.device_id}: {device.display_name}"
+            item = QListWidgetItem(item_text)
+            item.setData(Qt.ItemDataRole.UserRole, device)
+            self.device_list.addItem(item)
 
     def refresh_register_table(self) -> None:
         """Refresh the register table for the current device."""
@@ -323,27 +313,16 @@ class MainWindow(QMainWindow):
         if dialog.exec() == QDialog.DialogCode.Accepted:
             device_id, name, description = dialog.get_device_config()
 
-            # Check if device ID already exists
-            if self.simulation_runtime:
-                try:
-                    # Create device descriptor
-                    class DeviceDescriptor:
-                        def __init__(self, device_id, name, registers):
-                            self.device_id = device_id
-                            self.name = name
-                            self.registers = registers
+        try:
+            descriptor = DeviceDescriptor(device_id=device_id, name=name, registers=[])
+            device = self.simulation_runtime.add_device(descriptor)
+            device.config = DeviceConfig(device_id, name, description)
 
-                    descriptor = DeviceDescriptor(device_id, name, [])
-                    device = self.simulation_runtime.add_device(descriptor)
+            self.log_message(f"Added device: {device.display_name}")
+            self.refresh_device_list()
 
-                    from mb_sim.models.device import DeviceConfig
-                    device.config = DeviceConfig(device_id, name, description)
-
-                    self.log_message(f"Added device: {device.display_name}")
-                    self.refresh_device_list()
-
-                except ValueError as e:
-                    QMessageBox.warning(self, "Error", str(e))
+        except ValueError as error:
+            QMessageBox.warning(self, "Error", str(error))
 
     def remove_device(self) -> None:
         """Remove the selected device."""
@@ -358,11 +337,14 @@ class MainWindow(QMainWindow):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
 
-        if reply == QMessageBox.StandardButton.Yes:
-            # Note: We don't have a remove method in the runtime yet
-            self.log_message(f"Removed device: {self.current_device.display_name}")
-            self.current_device = None
-            self.refresh_device_list()
+        if reply == QMessageBox.StandardButton.Yes and self.current_device:
+            try:
+                self.simulation_runtime.remove_device(self.current_device.config.device_id)
+                self.log_message(f"Removed device: {self.current_device.display_name}")
+                self.current_device = None
+                self.refresh_device_list()
+            except KeyError as error:
+                QMessageBox.warning(self, "Error", str(error))
 
     def add_register(self) -> None:
         """Add a new register to the current device."""
